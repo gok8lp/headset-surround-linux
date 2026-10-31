@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" font-family="Inter,Segoe UI,Helvetica,Arial,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16131f"/><stop offset="1" stop-color="#1f1b2e"/></linearGradient>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8b84a8"/></marker>
+  </defs>
+  <rect width="960" height="470" rx="18" fill="url(#bg)"/>
+  <text x="40" y="52" fill="#f2efff" font-size="26" font-weight="700">headset-surround-linux</text>
+  <text x="40" y="80" fill="#a9a3c4" font-size="15">Linux'ta her kulaklık için sanal 7.1 surround + Dolby benzeri Sinema modu</text>
+
+  <rect x="26" y="190" width="200" height="86" rx="12" fill="#2a2540" stroke="#4b4370"/>
+  <text x="125" y="226" fill="#f2efff" font-size="15" font-weight="600" text-anchor="middle">Oyun / film / müzik</text>
+  <text x="125" y="250" fill="#a9a3c4" font-size="13" text-anchor="middle">8 kanal (5.1 / 7.1)</text>
+
+  <rect x="270" y="120" width="300" height="86" rx="12" fill="#1d2b2a" stroke="#2f6b60"/>
+  <text x="420" y="155" fill="#d8fff5" font-size="15" font-weight="600" text-anchor="middle">Ön Sol/Sağ · Orta · Bas</text>
+  <text x="420" y="180" fill="#8fd6c4" font-size="13" text-anchor="middle">Değişmeden geçer — müzik doğal kalır</text>
+
+  <rect x="270" y="262" width="300" height="96" rx="12" fill="#2b2140" stroke="#7c5cd6"/>
+  <text x="420" y="295" fill="#efe6ff" font-size="15" font-weight="600" text-anchor="middle">Arka + yan kanallar</text>
+  <text x="420" y="320" fill="#c3b0f5" font-size="13" text-anchor="middle">HRTF (MIT KEMAR)</text>
+  <text x="420" y="342" fill="#c3b0f5" font-size="13" text-anchor="middle">Tiz yumuşatma −7 dB</text>
+
+  <path d="M226 222 C248 222 240 163 268 163" stroke="#8b84a8" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <path d="M226 244 C248 244 240 310 268 310" stroke="#8b84a8" stroke-width="2" fill="none" marker-end="url(#a)"/>
+
+  <rect x="612" y="110" width="180" height="64" rx="12" fill="#2a2540" stroke="#4b4370"/>
+  <text x="702" y="148" fill="#f2efff" font-size="15" font-weight="600" text-anchor="middle">Surround 7.1</text>
+  <rect x="612" y="214" width="180" height="144" rx="12" fill="#2a2540" stroke="#d6a35c"/>
+  <text x="702" y="244" fill="#ffe2b8" font-size="14" font-weight="600" text-anchor="middle">Sinema (Dolby benzeri)</text>
+  <text x="702" y="276" fill="#e3c08f" font-size="12.5" text-anchor="middle">+ crossfeed</text>
+  <text x="702" y="300" fill="#e3c08f" font-size="12.5" text-anchor="middle">+ oda yansımaları</text>
+  <text x="702" y="324" fill="#e3c08f" font-size="12.5" text-anchor="middle">+ bas +4 dB</text>
+
+  <path d="M570 163 L610 142" stroke="#8b84a8" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <path d="M570 310 L610 150" stroke="#8b84a8" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <path d="M570 170 L610 270" stroke="#8b84a8" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <path d="M570 315 L610 290" stroke="#8b84a8" stroke-width="2" fill="none" marker-end="url(#a)"/>
+
+  <rect x="826" y="190" width="118" height="86" rx="43" fill="#2a2540" stroke="#4b4370"/>
+  <g transform="translate(885 222)" fill="none" stroke="#f2efff" stroke-width="3" stroke-linecap="round">
+    <path d="M-16 8 V0 a16 16 0 0 1 32 0 V8"/><rect x="-20" y="4" width="8" height="14" rx="3" fill="#f2efff"/><rect x="12" y="4" width="8" height="14" rx="3" fill="#f2efff"/>
+  </g>
+  <text x="885" y="262" fill="#a9a3c4" font-size="10.5" text-anchor="middle">Kulaklığın (stereo)</text>
+  <path d="M792 142 C810 142 805 215 824 222" stroke="#8b84a8" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <path d="M792 286 C810 286 805 250 824 244" stroke="#8b84a8" stroke-width="2" fill="none" marker-end="url(#a)"/>
+
+  <text x="480" y="430" fill="#8b84a8" font-size="13" text-anchor="middle">PipeWire içinde çalışır · ek servis yok · kurulumda ses çalınmaz</text>
+</svg>
