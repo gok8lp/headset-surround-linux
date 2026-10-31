@@ -9,7 +9,7 @@
 # SPDX-License-Identifier: MIT
 set -euo pipefail
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 SOFA_URL="https://raw.githubusercontent.com/hoene/libmysofa/main/share/MIT_KEMAR_normal_pinna.sofa"
 
 CFG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -22,8 +22,10 @@ UNIT_DIR="$CFG_HOME/systemd/user"
 OWN_UNIT="headset-surround.service"
 F_SURR="$CONF_DIR/60-headset-surround.conf"
 F_CINE="$CONF_DIR/61-headset-cinema.conf"
+F_BASS="$CONF_DIR/62-headset-bass.conf"
 SINK_SURR="headset_surround"
 SINK_CINE="headset_cinema"
+SINK_BASS="headset_bass"
 # earlier hand-made versions of this setup
 LEGACY_FILES=("$CONF_DIR/60-g633-sanal-surround.conf" "$CONF_DIR/61-g633-sinema.conf")
 
@@ -64,7 +66,7 @@ headset-surround-linux $VERSION
 Usage / Kullanim:  install.sh [options]
 
 Components (no flag = interactive menu) / Bilesenler (bayraksiz = menu):
-  --surround        Virtual 7.1 surround + Cinema (Dolby-like) outputs
+  --surround        Virtual 7.1 surround, Cinema (Dolby-like) and Bass Boost outputs
   --headsetcontrol  Install headsetcontrol (sidetone, LEDs, battery) via package manager
   --dark            Dark mode fix (GTK prefer-dark, GTK3 theme, Flatpak Qt apps)
   --hyprland        Hyprland volume keys: smaller step, higher max
@@ -186,9 +188,9 @@ check_pipewire() {
 
 # prints "name<TAB>description" for real output devices
 list_sinks() {
-    pactl list sinks 2>/dev/null | awk -v a="$SINK_SURR" -v b="$SINK_CINE" '
+    pactl list sinks 2>/dev/null | awk -v a="$SINK_SURR" -v b="$SINK_CINE" -v c="$SINK_BASS" '
         /^[[:space:]]*Name:/ { name=$2 }
-        /^[[:space:]]*Description:/ { sub(/^[[:space:]]*Description: /,""); if (name!=a && name!=b && name !~ /g633_(surround|sinema)/) print name "\t" $0 }'
+        /^[[:space:]]*Description:/ { sub(/^[[:space:]]*Description: /,""); if (name!=a && name!=b && name!=c && name !~ /g633_(surround|sinema)/) print name "\t" $0 }'
 }
 
 pick_device() {
@@ -308,12 +310,12 @@ build_rear() { # build_rear sofa_file_or_empty
     done
 }
 
-build_graph() { # build_graph surround|cinema sofa_file_or_empty
+build_graph() { # build_graph surround|cinema|bass sofa_file_or_empty
     local mode=$1 sofa=$2 s c
     NODES="" LINKS="" REAR_INPUTS=""
     for c in FL FR FC LFE; do node "{ type = builtin label = copy name = cp$c }"; done
     build_rear "$sofa"
-    if [ "$mode" = surround ]; then
+    if [ "$mode" = surround ] || [ "$mode" = bass ]; then
         local mg='"Gain 1" = 1.0 "Gain 2" = 0.7 "Gain 3" = 0.5 "Gain 4" = 1.0'
         for s in L R; do
             node "{ type = builtin label = mixer name = mix$s control = { $mg } }"
@@ -321,6 +323,20 @@ build_graph() { # build_graph surround|cinema sofa_file_or_empty
             link "cpLFE:Out" "mix$s:In 3"; link "warm$s:Out" "mix$s:In 4"
         done
         OUTPUTS='"mixL:Out" "mixR:Out"'
+        if [ "$mode" = bass ]; then
+            # heavy bass: -9 dB headroom first so the boost does not clip, then
+            # +10 dB low shelf, +5 dB sub peak, a small mud cut and +3 dB makeup on top
+            for s in L R; do
+                node "{ type = builtin label = mixer name = pre$s control = { \"Gain 1\" = 0.35 } }"
+                node "{ type = builtin label = bq_lowshelf name = shelfB$s control = { \"Freq\" = 90.0 \"Q\" = 0.7 \"Gain\" = 10.0 } }"
+                node "{ type = builtin label = bq_peaking name = sub$s control = { \"Freq\" = 45.0 \"Q\" = 1.2 \"Gain\" = 5.0 } }"
+                node "{ type = builtin label = bq_peaking name = mud$s control = { \"Freq\" = 300.0 \"Q\" = 1.0 \"Gain\" = -2.5 } }"
+                node "{ type = builtin label = bq_highshelf name = air$s control = { \"Freq\" = 6000.0 \"Q\" = 0.7 \"Gain\" = 3.0 } }"
+                link "mix$s:Out" "pre$s:In 1"; link "pre$s:Out" "shelfB$s:In"
+                link "shelfB$s:Out" "sub$s:In"; link "sub$s:Out" "mud$s:In"; link "mud$s:Out" "air$s:In"
+            done
+            OUTPUTS='"airL:Out" "airR:Out"'
+        fi
     else
         # crossfeed: opposite front channel, 0.3 ms later, low-passed (head shadow)
         local src o i dl
@@ -475,8 +491,11 @@ install_surround() {
     fi
     [ -n "$sofa" ] && ok "HRTF: $sofa"
 
-    local existed=0
-    pactl list short sinks | awk '{print $2}' | grep -qxF "$SINK_SURR" && existed=1
+    # remember which outputs are new, so only those get the quiet starting volume
+    local sk new_sinks=()
+    for sk in "$SINK_SURR" "$SINK_CINE" "$SINK_BASS"; do
+        pactl list short sinks | awk '{print $2}' | grep -qxF "$sk" || new_sinks+=("$sk")
+    done
 
     local f
     for f in "${LEGACY_FILES[@]}"; do
@@ -485,28 +504,27 @@ install_surround() {
     local short=${desc:-headset}
     emit_conf surround "$SINK_SURR" "Surround 7.1 - $short" "$DEVICE" "$sofa" | write_file "$F_SURR"
     emit_conf cinema "$SINK_CINE" "Cinema / Sinema (Dolby-like) - $short" "$DEVICE" "$sofa" | write_file "$F_CINE"
+    emit_conf bass "$SINK_BASS" "Bass Boost - $short" "$DEVICE" "$sofa" | write_file "$F_BASS"
     state_set device "$DEVICE"
     [ -n "$(state_get previous_default || true)" ] || state_set previous_default "$(pactl get-default-sink)"
 
     start_service
     wait_sink "$SINK_SURR" || die "$(t "The surround output did not appear. Check: journalctl --user -u $(service_unit)" "Surround cikisi olusmadi. Kontrol: journalctl --user -u $(service_unit)")"
     wait_sink "$SINK_CINE" || warn "$(t "Cinema output did not appear." "Sinema cikisi olusmadi.")"
+    wait_sink "$SINK_BASS" || warn "$(t "Bass Boost output did not appear." "Bass Boost cikisi olusmadi.")"
 
     # The filters sit on top of the real device: keep the device itself at 100 % and
     # control loudness on the virtual outputs. New outputs start quiet on purpose.
     run pactl set-sink-volume "$DEVICE" 100%
-    if [ "$existed" = 0 ]; then
-        run pactl set-sink-volume "$SINK_SURR" 30%
-        run pactl set-sink-volume "$SINK_CINE" 30%
-    fi
+    for sk in "${new_sinks[@]}"; do run pactl set-sink-volume "$sk" 30%; done
     if [ "$SET_DEFAULT" = 1 ]; then run pactl set-default-sink "$SINK_SURR"; fi
-    ok "$(t "Outputs ready: 'Surround 7.1' and 'Cinema (Dolby-like)'. Pick one in your sound settings. Volume starts at 30%, raise it slowly." "Cikislar hazir: 'Surround 7.1' ve 'Sinema (Dolby benzeri)'. Ses ayarlarindan birini sec. Ses %30'dan baslar, yavasca ac.")"
+    ok "$(t "Outputs ready: 'Surround 7.1', 'Cinema (Dolby-like)' and 'Bass Boost'. Pick one in your sound settings. Volume starts at 30%, raise it slowly." "Cikislar hazir: 'Surround 7.1', 'Sinema (Dolby benzeri)' ve 'Bass Boost'. Ses ayarlarindan birini sec. Ses %30'dan baslar, yavasca ac.")"
 }
 
 uninstall_surround() {
     say "$(t "Removing surround outputs" "Surround cikislari kaldiriliyor")"
     local f any=0
-    for f in "$F_SURR" "$F_CINE" "${LEGACY_FILES[@]}"; do
+    for f in "$F_SURR" "$F_CINE" "$F_BASS" "${LEGACY_FILES[@]}"; do
         if [ -e "$f" ]; then backup "$f"; run rm -f "$f"; any=1; fi
     done
     [ "$any" = 1 ] || warn "$(t "Nothing installed." "Kurulu bir sey yok.")"

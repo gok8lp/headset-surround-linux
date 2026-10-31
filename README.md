@@ -21,11 +21,12 @@ To pick the parts yourself, pass options:
 curl -fsSL https://raw.githubusercontent.com/gok8lp/headset-surround-linux/main/install.sh | bash -s -- --all
 ```
 
-You get two new outputs in your sound settings:
+You get three new outputs in your sound settings:
 
 | Output | What it does |
 |---|---|
 | **Surround 7.1** | Front, center and LFE pass through unchanged, so music sounds exactly as before. Rear and side channels are placed behind and beside you with an HRTF (MIT KEMAR), and the HRTF's harsh treble is tamed. |
+| **Bass Boost** | Surround plus heavy bass: +10 dB low shelf at 90 Hz and +5 dB sub-bass at 45 Hz, with a small cut in the muddy mids and a bit of air on top. The signal is first lowered by 9 dB so the boost does not clip. |
 | **Cinema (Dolby-like)** | Surround plus crossfeed (speaker-like front image), early room reflections, +4 dB bass and a little presence. It is close in spirit to the "Dolby / DTS Headphone" mode in vendor apps. |
 
 > **Safe by design:** the installer never plays a sound. New outputs start at **30 %** volume, and the real
@@ -35,7 +36,7 @@ You get two new outputs in your sound settings:
 
 | Option | |
 |---|---|
-| `--surround` | Surround + Cinema outputs |
+| `--surround` | Surround, Cinema and Bass Boost outputs |
 | `--headsetcontrol` | Install [HeadsetControl](https://github.com/Sapd/HeadsetControl) (sidetone, LEDs, battery, auto-off) |
 | `--dark` | Dark-mode fix: GTK `prefer-dark`, `adw-gtk3-dark` theme, and Flatpak Qt apps that start light |
 | `--hyprland` | Hyprland volume keys: 2 % step, 150 % max (`--vol-step`, `--vol-max`) |
@@ -73,7 +74,7 @@ Notes:
 
 ## How it works
 
-The installer writes two PipeWire
+The installer writes three PipeWire
 [filter-chain](https://docs.pipewire.org/page_module_filter_chain.html) configs to
 `~/.config/pipewire/filter-chain.conf.d/` and runs them with the `filter-chain` user service (or its own
 `headset-surround.service` if your distro does not ship one). Each config creates an 8-channel virtual sink

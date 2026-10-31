@@ -21,11 +21,12 @@ kurmak için:
 curl -fsSL https://raw.githubusercontent.com/gok8lp/headset-surround-linux/main/install.sh | bash -s -- --all --lang tr
 ```
 
-Ses ayarlarında iki yeni çıkış görünür:
+Ses ayarlarında üç yeni çıkış görünür:
 
 | Çıkış | Ne yapar |
 |---|---|
 | **Surround 7.1** | Ön kanallar, orta kanal ve bas değişmeden geçer; müzik eskisi gibi doğal kalır. Arka ve yan kanallar HRTF (MIT KEMAR) ile arkana ve yanına yerleştirilir, HRTF'nin sert tizleri yumuşatılır. |
+| **Bass Boost** | Surround'a ek olarak güçlü bas: 90 Hz'te +10 dB, 45 Hz'te +5 dB alt bas, çamurlu orta seslerde küçük bir kesme ve tizlerde biraz parlaklık. Ses bozulmasın diye sinyal önce 9 dB kısılır. |
 | **Sinema (Dolby benzeri)** | Surround'a ek olarak crossfeed (hoparlör gibi ön ses sahnesi), oda yansımaları, +4 dB bas ve hafif netlik. Üretici uygulamalarındaki "Dolby / DTS Headphone" moduna benzer. |
 
 > **Güvenli:** Kurulum sırasında hiç ses çalınmaz. Yeni çıkışlar **%30** sesle başlar. Gerçek kulaklık
@@ -35,7 +36,7 @@ Ses ayarlarında iki yeni çıkış görünür:
 
 | Seçenek | |
 |---|---|
-| `--surround` | Surround + Sinema çıkışları |
+| `--surround` | Surround, Sinema ve Bass Boost çıkışları |
 | `--headsetcontrol` | [HeadsetControl](https://github.com/Sapd/HeadsetControl) kurar (kendi sesini duyma, ışıklar, pil, otomatik kapanma) |
 | `--dark` | Karanlık mod düzeltmesi: GTK `prefer-dark`, `adw-gtk3-dark` teması, açık temada başlayan Flatpak Qt uygulamaları |
 | `--hyprland` | Hyprland ses tuşları: %2 adım, en fazla %150 (`--vol-step`, `--vol-max`) |
@@ -73,7 +74,7 @@ Notlar:
 
 ## Nasıl çalışır
 
-Kurulum, `~/.config/pipewire/filter-chain.conf.d/` klasörüne iki PipeWire
+Kurulum, `~/.config/pipewire/filter-chain.conf.d/` klasörüne üç PipeWire
 [filter-chain](https://docs.pipewire.org/page_module_filter_chain.html) yapılandırması yazar ve bunları
 `filter-chain` kullanıcı servisiyle çalıştırır. Dağıtımında bu servis yoksa kendi `headset-surround.service`
 servisini oluşturur. Her yapılandırma 8 kanallı sanal bir çıkış oluşturur; bu çıkışın stereo sesi doğrudan
